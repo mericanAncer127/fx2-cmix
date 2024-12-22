@@ -15,6 +15,7 @@
 #include "readalike_prepr/self_extract.h"
 #include "readalike_prepr/phda9_preprocess.h"
 #include "readalike_prepr/misc.h"
+#include "readalike_prepr/f_transform.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -362,6 +363,13 @@ int main(int argc, char** argv) {
     std::cout << "Cmix decompression finished" << std::endl;
 
     split4Decomp();
+    // De-Transform before preprocessor
+    de_transform();
+   std::cout << "Revert Tranform before preprocessing" << std::endl;
+
+    // apply De-Pattern based Transform preprocessor
+    pat_de_transform();
+    std::cout << "de_ pat transformed" << std::endl << std::flush;
 
     // apply phda9 preprocessor
     phda9_resto();
@@ -403,9 +411,18 @@ int main(int argc, char** argv) {
 
     // apply phda9 preprocessor
     phda9_prepr();
+   std::cout << "applied phda9" << std::endl << std::flush;
+
+    // apply Pattern Based Transform
+    pat_transform();
+    std::cout << "pattern transformed" << std::endl << std::flush;
+
+    // apply phda9 preprocessor
+    transform();
+   std::cout << "transformed" << std::endl << std::flush;
 
     // merge all input parts after preprocessing
-    cat(".main_phda9prepr", ".intro", "un1");
+    cat(".ex_pat.main_phda9prepr", ".intro", "un1");
     cat("un1", ".coda", ".ready4cmix");
 
     // run compression
