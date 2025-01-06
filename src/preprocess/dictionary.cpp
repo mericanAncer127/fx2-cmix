@@ -80,7 +80,7 @@ Dictionary::Dictionary(std::string s, FILE* dictionary, bool encode, bool decode
   for (char l0 : symbols) {
       for (char l1 : symbols) {
           if (SEP.find(l1) == SEP.end()) {
-              full_symbols.push_back(l0 << 8 + l1);
+              full_symbols.push_back((l0 << 8) + l1);
           }
       }
   }
@@ -88,7 +88,7 @@ Dictionary::Dictionary(std::string s, FILE* dictionary, bool encode, bool decode
       for (char l1 : symbols) {
           for (char l2 : symbols) {
               if (SEP.find(l2) == SEP.end()) {
-                  full_symbols.push_back(l0 << 16 + l1 << 8 + l2);
+                  full_symbols.push_back((l0 << 16) + (l1 << 8) + l2);
               }
           }
       }
