@@ -12,6 +12,7 @@ namespace preprocessor {
 class Dictionary {
  public:
   Dictionary(FILE* dictionary, bool encode, bool decode);
+  Dictionary(std::string s, FILE* dictionary, bool encode, bool decode, bool firn);
   void Encode(FILE* input, int len, FILE* output);
   unsigned char Decode(FILE* input);
 

@@ -1,7 +1,9 @@
 #include "dictionary.h"
 
 #include <stdio.h>
+#include <fstream>
 #include <string>
+#include <unordered_set>
 
 namespace preprocessor {
 
@@ -33,7 +35,71 @@ void EncodeBytes(unsigned int bytes, FILE* output) {
 }
 
 }
+const std::unordered_set<char> SEP = {',', '.', ';', '?', '!', '\n'};
 
+std::vector<std::string> read_most_common_words(const std::string &file_path) {
+    std::vector<std::string> words;
+    std::ifstream file(file_path);
+    std::string word;
+    while (std::getline(file, word)) {
+        if (!word.empty()) {
+            words.push_back(word);
+        }
+    }
+    return words;
+}
+Dictionary::Dictionary(std::string s, FILE* dictionary, bool encode, bool decode, bool firn) {
+  auto most_common_words = read_most_common_words("dict");
+  if(firn == false)
+    Dictionary(dictionary, encode, decode);
+    
+  std::unordered_map<char, int> char_freq;
+  for (char ch : s) {
+      char_freq[ch]++;
+  }
+
+  // Sort characters by frequency and select top symbols
+  std::vector<char> symbols;
+  for (const auto &[ch, freq] : char_freq) {
+      if (ch != ' ') symbols.push_back(ch);
+  }
+  std::sort(symbols.begin(), symbols.end(), [&](char a, char b) {
+      return char_freq[a] > char_freq[b];
+  });
+  if (symbols.size() > 35) symbols.resize(35);
+
+  // Generate multi-character symbols
+  // Initialize full_symbols with single-character strings
+  
+  std::vector<unsigned int> full_symbols;
+  for (char ch : symbols) {
+      full_symbols.push_back(ch); // Convert each char to a string
+  }
+
+  // Continue to add multi-character symbols as per the original code
+  for (char l0 : symbols) {
+      for (char l1 : symbols) {
+          if (SEP.find(l1) == SEP.end()) {
+              full_symbols.push_back(l0 << 256 + l1);
+          }
+      }
+  }
+  for (char l0 : symbols) {
+      for (char l1 : symbols) {
+          for (char l2 : symbols) {
+              if (SEP.find(l2) == SEP.end()) {
+                  full_symbols.push_back(l0 << 65536 + l1 << 256 + l2);
+              }
+          }
+      }
+  }
+
+  // Map most common words to symbols
+  std::unordered_map<std::string, std::string> word_to_symbol;
+  for (size_t i = 0; i < most_common_words.size() && i < full_symbols.size(); ++i) {
+      byte_map_[most_common_words[i]] = full_symbols[i];
+  }
+}
 Dictionary::Dictionary(FILE* dictionary, bool encode, bool decode) {
   fseek(dictionary, 0L, SEEK_END);
   unsigned long long len = ftell(dictionary);
