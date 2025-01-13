@@ -118,21 +118,21 @@ void encode_text(FILE* in, FILE* out, int len, std::string temp_path,
   if (!temp_output) abort();
   int orig_pos = ftell(in);
 
-  // Dictionary dict(dictionary, true, false);
-  // Create a buffer to hold 50,000 bytes
-  const size_t size_to_read = 50000;
-  char buffer[size_to_read];
+  Dictionary dict(dictionary, true, false);
+  // // Create a buffer to hold 50,000 bytes
+  // const size_t size_to_read = 50000;
+  // char buffer[size_to_read];
 
-  // Read exactly 50,000 bytes from the file into the buffer
-  size_t bytes_read = std::fread(buffer, 1, size_to_read, in);
-  if (bytes_read == 0) {
-      std::cerr << "Failed to read data or reached end of file" << std::endl;
-      std::fclose(in);
-  }
+  // // Read exactly 50,000 bytes from the file into the buffer
+  // size_t bytes_read = std::fread(buffer, 1, size_to_read, in);
+  // if (bytes_read == 0) {
+  //     std::cerr << "Failed to read data or reached end of file" << std::endl;
+  //     std::fclose(in);
+  // }
 
-  // Now create a std::string with the data we just read
-  std::string s(buffer, bytes_read);
-  Dictionary dict(s, dictionary, true, false, true);
+  // // Now create a std::string with the data we just read
+  // std::string s(buffer, bytes_read);
+  // Dictionary dict(s, dictionary, true, false, true);
   dict.Encode(in, len, temp_output);
 
   int size = ftell(temp_output);
