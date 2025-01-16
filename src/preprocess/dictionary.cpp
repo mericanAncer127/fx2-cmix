@@ -1,9 +1,10 @@
 #include "dictionary.h"
-
+#include <iostream>
 #include <stdio.h>
 #include <fstream>
 #include <string>
 #include <unordered_set>
+#include <iomanip>
 
 namespace preprocessor {
 
@@ -13,6 +14,7 @@ const unsigned char kCapitalized = 0x40;
 const unsigned char kUppercase = 0x07;
 const unsigned char kEndUpper = 0x06;
 const unsigned char kEscape = 0x0C;
+const unsigned char UC0 = 192, UC1 = 193, UC2 = 221;
 
 void EncodeByte(unsigned char c, FILE* output) {
   if (c == kEndUpper || c == kEscape || c == kUppercase ||
@@ -32,6 +34,9 @@ void EncodeBytes(unsigned int bytes, FILE* output) {
   if (bytes & 0xFF0000) {
     putc((unsigned char)((bytes&0xFF0000)>>16), output);
   }
+  if (bytes & 0xFF000000) {
+    putc((unsigned char)((bytes&0xFF000000)>>24), output);
+  }
 }
 
 }
@@ -48,88 +53,135 @@ std::vector<std::string> read_most_common_words(const std::string &file_path) {
     }
     return words;
 }
-Dictionary::Dictionary(std::string s, FILE* dictionary, bool encode, bool decode, bool firn) {
-  auto most_common_words = read_most_common_words("dict");
-  if(firn == false)
-    Dictionary(dictionary, encode, decode);
-    
-  std::unordered_map<char, int> char_freq;
-  for (char ch : s) {
-      char_freq[ch]++;
-  }
-
-  // Sort characters by frequency and select top symbols
-  std::vector<char> symbols;
-  for (const auto &[ch, freq] : char_freq) {
-      if (ch != ' ') symbols.push_back(ch);
-  }
-  std::sort(symbols.begin(), symbols.end(), [&](char a, char b) {
-      return char_freq[a] > char_freq[b];
-  });
-  if (symbols.size() > 35) symbols.resize(35);
-
-  // Generate multi-character symbols
-  // Initialize full_symbols with single-character strings
-  
-  std::vector<unsigned int> full_symbols;
-  for (char ch : symbols) {
-      full_symbols.push_back(ch); // Convert each char to a string
-  }
-
-  // Continue to add multi-character symbols as per the original code
-  for (char l0 : symbols) {
-      for (char l1 : symbols) {
-          if (SEP.find(l1) == SEP.end()) {
-              full_symbols.push_back((l0 << 8) + l1);
-          }
-      }
-  }
-  for (char l0 : symbols) {
-      for (char l1 : symbols) {
-          for (char l2 : symbols) {
-              if (SEP.find(l2) == SEP.end()) {
-                  full_symbols.push_back((l0 << 16) + (l1 << 8) + l2);
-              }
-          }
-      }
-  }
-
-  // Map most common words to symbols
-  std::unordered_map<std::string, std::string> word_to_symbol;
-  for (size_t i = 0; i < most_common_words.size() && i < full_symbols.size(); ++i) {
-      byte_map_[most_common_words[i]] = full_symbols[i];
-  }
-}
 Dictionary::Dictionary(FILE* dictionary, bool encode, bool decode) {
-  fseek(dictionary, 0L, SEEK_END);
-  unsigned long long len = ftell(dictionary);
-  fseek(dictionary, 0L, SEEK_SET);
-  std::string line;
-  int line_count = 0;
-  const int kBoundary1 = 80, kBoundary2 = kBoundary1 + 3840,
-      kBoundary3 = kBoundary2 + 40960;
-  for (unsigned pos = 0; pos < len; ++pos) {
-    unsigned char c = getc(dictionary);
-    if (c >= 'a' && c <= 'z') line += c;
-    else if (!line.empty()) {
-      if (line.size() > longest_word_) longest_word_ = line.size();
-      unsigned int bytes;
-      if (line_count < kBoundary1) {
-        bytes = 0x80 + line_count;
-      } else if (line_count < kBoundary2) {
-        bytes = 0xD0 + ((line_count-kBoundary1) / 80);
-        bytes += (0x80 + ((line_count-kBoundary1) % 80)) << 8;
-      } else if (line_count < kBoundary3) {
-        bytes = 0xF0 + (((line_count-kBoundary2) / 80) / 32);
-        bytes += (0xD0 + (((line_count-kBoundary2) / 80) % 32)) << 8;
-        bytes += (0x80 + ((line_count-kBoundary2) % 80)) << 16;
-      }
-      if (encode) byte_map_[line] = bytes;
-      if (decode) reverse_map_[bytes] = line;
-      ++line_count;
-      line.clear();
+    
+    // Step 1: Prepare ASCII codes array and calculate 
+    // getAsciiFrequencies
+    // std::unordered_map<int, int> ascii_freq_map;
+
+    // Use std::ifstream for efficient file reading
+    // std::ifstream inputFile(".main_phda9prepr");
+    // if (!inputFile) {
+    //     std::cerr << "Error: Unable to open input file!" << std::endl;
+    //     return;
+    // }
+
+    // Read file contents into a buffer for faster processing
+    // char c;
+    // while (inputFile.get(c)) {
+    //     ascii_freq_map[static_cast<unsigned char>(c)]++;
+    // }
+    // Find the first three unused ASCII codes
+    // int unusedCount = 0;
+    // std::cout << "The first three unused ASCII codes are: ";
+    // for (int i = 0x80; i < 256; ++i) {
+    //     if (ascii_freq_map.find(static_cast<unsigned char>(i)) == ascii_freq_map.end()) {
+            // If this ASCII code was never used (not found in the map)
+    //         std::cout << i;
+    //         unusedCount++;
+    //         if (unusedCount < 5) {
+    //             std::cout << ", ";
+    //         } else {
+    //             break;
+    //         }
+    //     }
+    // }
+
+    // std::cout << std::endl;
+
+    // char c;
+    // while (c = getc(in)) {
+    //     ascii_freq_map[static_cast<unsigned char>(c)]++;
+    // }
+    // Step 2: Sort ASCII codes by frequency
+
+    // std::vector<std::pair<int, int>> freq_vector(ascii_freq_map.begin(), ascii_freq_map.end());
+    // std::sort(freq_vector.begin(), freq_vector.end(), [](const std::pair<int, int>& a, const std::pair<int, int>& b) {
+    //     return a.second > b.second;
+    // });
+
+    std::vector<int> sorted_ascii = {0x20,0x65,0x61,0x74,0x69,0x6F,0x6E,0x72,0x73,0x6C,0x68,0x64,0x63,0x6D,0x75,0x70,0x0A,0x67,0x66,0x5D,0x5B,0x79,0x2E,0x27,0x77,0x62,0x2C,0x76,0x31,0x3E,0x30,0x7C,0x3D,0x6B,0x2F,0x32,0x43,0x53,0x3C,0x3A,0x54,0x2D,0x41,0x39,0x2A};
+    // for (const auto& pair : freq_vector) {
+    //     sorted_ascii.push_back(pair.first);
+    // }
+
+    // Step 2: Generate symbols (1, 2, 3 letter combinations)
+    std::vector<std::string> symbols;
+
+    // Generate 1-letter symbols
+    int limit = 45;
+    for (size_t i = 0; i < sorted_ascii.size() && i < limit; ++i) {
+        // Print the value in hexadecimal format
+        std::cout << "0x" << std::hex << std::uppercase << std::setfill('0') << std::setw(2)
+                  << sorted_ascii[i] << ",";
+        symbols.push_back(std::string(1, static_cast<char>(sorted_ascii[i])));
     }
-  }
+
+    // Generate 2-letter symbols
+    for (size_t i = 0; i < sorted_ascii.size() && i < limit; ++i) {
+        for (size_t j = 0; j < sorted_ascii.size() && j < limit; ++j) {
+            symbols.push_back(std::string(1, static_cast<char>(sorted_ascii[i])) + static_cast<char>(sorted_ascii[j]));
+        }
+    }
+
+    // Generate 3-letter symbols
+    for (size_t i = 0; i < sorted_ascii.size() && i < limit; ++i) {
+        for (size_t j = 0; j < sorted_ascii.size() && j < limit; ++j) {
+            for (size_t k = 0; k < sorted_ascii.size() && k < limit; ++k) {
+                symbols.push_back(std::string(1, static_cast<char>(sorted_ascii[i])) + static_cast<char>(sorted_ascii[j]) + static_cast<char>(sorted_ascii[k]));
+            }
+        }
+    }
+    std::cout << "Step 2: Generated symbols (1-letter, 2-letter, 3-letter combinations)." << std::endl;
+
+    // Step 4 Convert symbols into int Array
+    std::vector<int> symbol_offset;
+
+    // Iterate over each symbol
+    for (const auto& symbol : symbols) {
+        int intValue = 0;  // Initialize the integer to store the packed bytes
+        
+        // Ensure the symbol is not longer than 3 characters (as per the requirement)
+        size_t length = symbol.size() < 3 ? symbol.size() : 3;
+
+        // Pack the first 3 characters into the integer (each character as a byte)
+        for (size_t i = 0; i < length; ++i) {
+            intValue |= (static_cast<unsigned char>(symbol[i]) << (8 * (length - 1 - i)));
+        }
+
+        // Save the result to the intArray
+        symbol_offset.push_back(intValue);
+    }
+
+    fseek(dictionary, 0L, SEEK_END);
+    unsigned long long len = ftell(dictionary);
+    fseek(dictionary, 0L, SEEK_SET);
+    std::string line;
+    size_t index = 0;
+    int line_count = symbol_offset[index];
+
+    const int kBoundary1 = 0xff, kBoundary2 = kBoundary1 + 0xffff,
+        kBoundary3 = kBoundary2 + 0xffffff;
+    for (unsigned pos = 0; pos < len; ++pos) {
+        unsigned char c = getc(dictionary);
+        if (c >= 'a' && c <= 'z') line += c;
+        else if (!line.empty()) {
+            if (line.size() > longest_word_) longest_word_ = line.size();
+            unsigned int bytes;
+            if (line_count < kBoundary1) {
+                bytes = (line_count << 8) + UC0;
+            } else if (line_count < kBoundary2) {
+                bytes = (line_count << 8) + UC1;
+            } else if (line_count < kBoundary3) {
+                bytes = (line_count << 8) + UC2;
+            }
+            line_count=symbol_offset[++index];
+            if (encode) byte_map_[line] = bytes;
+            if (decode) reverse_map_[bytes] = line;
+            line.clear();
+        }
+    }
+
 }
 
 void Dictionary::Encode(FILE* input, int len, FILE* output) {
@@ -191,6 +243,8 @@ void Dictionary::EncodeWord(const std::string& word, int num_upper,
   if (num_upper > 1) putc(kUppercase, output);
   else if (num_upper == 1) putc(kCapitalized, output);
   auto it = byte_map_.find(word);
+  // std::cout << word << '\t';
+  // std::cout << std::hex << it->second << std::endl;
   if (it != byte_map_.end()) {
     EncodeBytes(it->second, output);
   } else if (!EncodeSubstring(word, output)) {
@@ -263,17 +317,29 @@ void Dictionary::AddToBuffer(FILE* input) {
     decode_capital_ = true;
   } else if (c == kEndUpper) {
     decode_upper_ = false;
-  } else if (c >= 0x80) {
-    unsigned int bytes = c;
-    if (c > 0xCF) {
-      c = NextChar(input);
-      bytes += c << 8;
-      if (c > 0xCF) {
+  } else if (c == UC0 || c == UC1 || c == UC2) { // means 1 byte
+    unsigned int bytes = 0;
+    unsigned char flag = c;
+    c = NextChar(input);
+    if(flag == UC0) // means 1 byte
+        bytes = c;
+    else if(flag == UC1){ // means 2 bytes
+        bytes = c;
         c = NextChar(input);
-        bytes += c << 16;
-      }
+        bytes +=  c << 8;
     }
+    else if (flag == UC2) { // means 3 bytes
+        bytes = c;
+        c = NextChar(input);
+        bytes +=  c << 8;
+        c = NextChar(input);
+        bytes +=  c << 16;
+    }
+    bytes = (bytes << 8) + flag; // add C0 | C1 | C2 at the end.
+
     std::string word = reverse_map_[bytes];
+    // std::cout << word << '\t';
+    // std::cout << std::hex << bytes << std::endl;
     for (unsigned int i = 0; i < word.size(); ++i) {
       if (i == 0 && decode_capital_) {
         word[i] = (word[i] - 'a') + 'A';
