@@ -109,7 +109,7 @@ Dictionary::Dictionary(FILE* dictionary, bool encode, bool decode) {
     std::vector<std::string> symbols;
 
     // Generate 1-letter symbols
-    int limit = 208;
+    int limit = 45;
     // std::cout << sorted_ascii.size() << std::endl;
     for (size_t i = 0; i < sorted_ascii.size() && i < limit; ++i) {
         // Print the value in hexadecimal format
