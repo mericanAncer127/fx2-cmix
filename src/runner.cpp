@@ -227,7 +227,7 @@ bool RunCompression(bool enable_preprocess, const std::string& input_path,
   }
   fclose(data_in);
   fclose(temp_out);
-  return;
+  return true;
 
   std::ifstream temp_in(temp_path, std::ios::in | std::ios::binary);
   if (!temp_in.is_open()) return false;
