@@ -227,6 +227,7 @@ bool RunCompression(bool enable_preprocess, const std::string& input_path,
   }
   fclose(data_in);
   fclose(temp_out);
+  return;
 
   std::ifstream temp_in(temp_path, std::ios::in | std::ios::binary);
   if (!temp_in.is_open()) return false;
@@ -425,6 +426,7 @@ int main(int argc, char** argv) {
     cat(".main_phda9prepr", ".intro", "un1");
     cat("un1", ".coda", ".ready4cmix");
 
+    std::cout << "Enable_Preprocess: " << enable_preprocess << std::endl;
     // run compression
     input_path = ".ready4cmix";
     dictionary = fopen(".dict", "rb");
