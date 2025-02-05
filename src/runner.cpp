@@ -413,6 +413,7 @@ int main(int argc, char** argv) {
     // apply phda9 preprocessor
     phda9_prepr();
    std::cout << "applied phda9" << std::endl << std::flush;
+   return 0;
 
   //   // apply Pattern Based Transform
   //   pat_transform();
