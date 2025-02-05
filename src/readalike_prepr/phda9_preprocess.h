@@ -849,12 +849,15 @@ bool cat(char const * filename_from1, char const * filename_from2, char const * 
 int phda9_prepr() {
    // open files
   FILE *in=fopen(".main_reordered", "rb");
+  std::cout << "Opened main_reordered" << std::endl;
   //if (!in)  exit(1);
   FILE *out=fopen(".main_phda9prepr", "wb");
+  std::cout << "Opened main_phda9prepr" << std::endl;
   //if (!out)  exit(1);
 
   // process file
   encode_txt_wit(in,out);
+  std::cout << "encoded_txt_wit" << std::endl;
   fclose(in) ;
   fclose(out);
   return 0;
