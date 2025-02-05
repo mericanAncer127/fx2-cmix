@@ -405,10 +405,12 @@ int main(int argc, char** argv) {
 
     // Preparing enwik9 for reordering
     split4Comp(input_path.c_str());
+   std::cout << input_path << std::endl << std::flush;
 
     // change the order of articles in the input
     reorder();
 
+    return 0;
     // apply phda9 preprocessor
     phda9_prepr();
    std::cout << "applied phda9" << std::endl << std::flush;
