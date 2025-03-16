@@ -13,7 +13,7 @@ unsigned int Encoder::Discretize(float p) {
 
 void Encoder::Encode(int bit) {
   const unsigned int p = Discretize(p_->Predict());
-  fprintf(stderr, "\rjust predicted: %c", bit);
+  // fprintf(stderr, "\rjust predicted: %c", bit);
   const unsigned int xmid = x1_ + ((x2_ - x1_) >> 16) * p +
       (((x2_ - x1_) & 0xffff) * p >> 16);
   if (bit) {
@@ -28,7 +28,7 @@ void Encoder::Encode(int bit) {
     x1_ <<= 8;
     x2_ = (x2_ << 8) + 255;
   }
-  fprintf(stderr, "\rfinished Encoding: %c", bit);
+  // fprintf(stderr, "\rfinished Encoding: %c", bit);
 }
 
 void Encoder::Flush() {

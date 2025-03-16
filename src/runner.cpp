@@ -149,7 +149,7 @@ void Compress(unsigned long long input_bytes, std::ifstream* is,
     if (pos % buffer_size == buffer_size - 1) {
       is->read(buffer, std::min(bytes_remaining, buffer_size));
       bytes_remaining -= std::min(bytes_remaining, buffer_size);
-      fprintf(stderr, "\rstill have: %d bytes to read", bytes_remaining);
+      // fprintf(stderr, "\rstill have: %d bytes to read", bytes_remaining);
     }
     if (pos % percent == 0) {
       double frac = 100.0 * pos / input_bytes;
