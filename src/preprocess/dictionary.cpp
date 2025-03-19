@@ -17,6 +17,9 @@ const unsigned char kEndUpper = 0x06;
 const unsigned char kEscape = 0x0C;
 const unsigned char UC0 = 0xC0, UC1 = 0XC1;
 
+const int L1Limit = 47;
+const int LTLimit = 60;
+
 std::vector<int> sorted_ascii = {0x65,0x61,0x74,0x69,0x6F,0x6E,0x72,0x73,0x6C,0x68,0x64,0x63,0x6D,0x75,0x70,0x67,0x66,0x79,0x77,0x62,0x76,0x31,0x30,0x6B,0x32,0x43,0x53,0x54,0x41,0x39,0x33,0x35,0x34,0x38,0x4D,0x78,0x49,0x36,0x50,0x42,0x37,0x52,0x44,0x45,0x48,0x4C,0x46,0x47,0x4E,0x57,0x55,0x4A,0x4F,0x7A,0x6A,0x4B,0x71,0x56,0x59,0x5A,0x51,0x58};
 // std::vector<int> sorted_ascii = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x7F, 0xC0, 0xC1, 0xDD, 0xDF, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7, 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, 0xFF, 0x100};
 void EncodeByte(unsigned char c, FILE* output) {
@@ -66,7 +69,7 @@ int asciiPosition(int ascii) {
         int index = std::distance(sorted_ascii.begin(), it);
 
         // Return 1 if index is within the first 12 elements, otherwise return 2
-        return (index < 12) ? 1 : 2;
+        return (index < L1Limit) ? 1 : 2;
     }
 
     // Return 0 if 'ascii' is not found in the vector
@@ -128,7 +131,7 @@ Dictionary::Dictionary(FILE* dictionary, bool encode, bool decode) {
     std::vector<std::string> symbols;
 
     // Generate 1-letter symbols
-    int limit1 = 24;
+    int limit1 = L1Limit;
     // std::cout << sorted_ascii.size() << std::endl;
     for (size_t i = 0; i < sorted_ascii.size() && i < limit1; ++i) {
         // Print the value in hexadecimal format
@@ -146,10 +149,10 @@ Dictionary::Dictionary(FILE* dictionary, bool encode, bool decode) {
     }
 
     // Generate 3-letter symbols
-    int limit3 = 36;
+    int limit3 = LTLimit - L1Limit; // means 20 * 60 * 60
     for (size_t i = limit1+limit2; i < sorted_ascii.size() && i < limit1+limit2+limit3; ++i) {
-        for (size_t j = limit1+limit2; j < sorted_ascii.size() && j < limit1+limit2+limit3; ++j) {
-            for (size_t k = limit1+limit2; k < sorted_ascii.size() && k < limit1+limit2+limit3; ++k) {
+        for (size_t j = 0; j < sorted_ascii.size() && j < LTLimit; ++j) {
+            for (size_t k = 0; k < sorted_ascii.size() && k < LTLimit; ++k) {
                 symbols.push_back(std::string(1, static_cast<char>(sorted_ascii[i])) + static_cast<char>(sorted_ascii[j]) + static_cast<char>(sorted_ascii[k]));
             }
         }
@@ -195,9 +198,9 @@ Dictionary::Dictionary(FILE* dictionary, bool encode, bool decode) {
                 // bytes = (line_count << 8) + UC0;
             } else if (line_count < kBoundary2) {
                 // bytes = (line_count << 8) + UC1;
-                bytes = 0x8080 + line_count;
+                bytes = 0x8000 + line_count;
             } else if (line_count < kBoundary3) {
-                bytes = 0x808080 + line_count;
+                bytes = 0x800000 + line_count;
                 // bytes = (line_count << 8) + UC2;
             }
             line_count=symbol_offset[++index];
