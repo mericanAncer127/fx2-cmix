@@ -153,7 +153,8 @@ Dictionary::Dictionary(FILE* dictionary, bool encode, bool decode) {
     for (size_t i = limit1+limit2; i < sorted_ascii.size() && i < limit1+limit2+limit3; ++i) {
         for (size_t j = 0; j < sorted_ascii.size() && j < LTLimit; ++j) {
             for (size_t k = 0; k < sorted_ascii.size() && k < LTLimit; ++k) {
-                symbols.push_back(std::string(1, static_cast<char>(sorted_ascii[i])) + static_cast<char>(sorted_ascii[j]) + static_cast<char>(sorted_ascii[k]));
+              if( j != k)
+                symbols.push_back(std::string(1, static_cast<char>(sorted_ascii[k])) + static_cast<char>(sorted_ascii[j]) + static_cast<char>(sorted_ascii[i]));
             }
         }
     }
@@ -198,9 +199,9 @@ Dictionary::Dictionary(FILE* dictionary, bool encode, bool decode) {
                 // bytes = (line_count << 8) + UC0;
             } else if (line_count < kBoundary2) {
                 // bytes = (line_count << 8) + UC1;
-                bytes = 0x8000 + line_count;
+                bytes = 0x8080 + line_count;
             } else if (line_count < kBoundary3) {
-                bytes = 0x800000 + line_count;
+                bytes = 0x808080 + line_count;
                 // bytes = (line_count << 8) + UC2;
             }
             line_count=symbol_offset[++index];
