@@ -128,7 +128,7 @@ Dictionary::Dictionary(FILE* dictionary, bool encode, bool decode) {
     std::vector<std::string> symbols;
 
     // Generate 1-letter symbols
-    int limit1 = 12;
+    int limit1 = 24;
     // std::cout << sorted_ascii.size() << std::endl;
     for (size_t i = 0; i < sorted_ascii.size() && i < limit1; ++i) {
         // Print the value in hexadecimal format
@@ -146,7 +146,7 @@ Dictionary::Dictionary(FILE* dictionary, bool encode, bool decode) {
     }
 
     // Generate 3-letter symbols
-    int limit3 = 40;
+    int limit3 = 36;
     for (size_t i = limit1+limit2; i < sorted_ascii.size() && i < limit1+limit2+limit3; ++i) {
         for (size_t j = limit1+limit2; j < sorted_ascii.size() && j < limit1+limit2+limit3; ++j) {
             for (size_t k = limit1+limit2; k < sorted_ascii.size() && k < limit1+limit2+limit3; ++k) {
